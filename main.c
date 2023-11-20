@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     system("clear");
-    
+
     T = string_comp(team_1, team_2, toss);
     while (overs <= T_overs || overs >= T_overs) {
         do {
@@ -328,10 +328,16 @@ void req_rate(float a, float b, float c, float d, float e) {
 }
 
 void runs_needed(int a, int b, int c, int d, int e) {
-    int runs_needed;
-    runs_needed = (a + 1) - b;
-    printf("runs needed to win %d", runs_needed);
+    static int runs_needed = 0; // Static variable to keep track of runs needed
+    if (runs_needed == 0) {
+        runs_needed = (a + 1) - b;
+        printf("runs needed to win %d", runs_needed);
+    } else {
+        runs_needed -= d;
+        printf("runs needed to win %d", runs_needed);
+    }
 }
+
 
 void projected_score(int a, int b, int c, int d, float e) {
     int p_score;
@@ -383,3 +389,5 @@ int my_toupper(int c) {
         return c;
     }
 }
+
+

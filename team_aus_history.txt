@@ -1,0 +1,11 @@
+David_Warner 22 38 7.0 3 550 Batsman 32 9.5 18.2 2
+Steve_Smith 18 35 6.5 1 480 Batsman 28 8.2 17.0 1
+Pat_Cummins 2 10 4.0 5 80 Bowler 29 8.8 13.5 0
+Glenn_Maxwell 15 25 8.5 2 320 Allrounder 31 7.0 21.0 1
+Aaron_Finch 25 40 7.2 0 420 Batsman 30 6.5 15.0 0
+Mitchell_Starc 5 20 5.0 4 120 Bowler 27 10.0 14.8 2
+Usman_Khawaja 20 35 6.8 1 390 Batsman 29 7.5 16.5 0
+Josh_Hazlewood 1 8 4.2 3 70 Bowler 30 9.0 12.5 0
+Adam_Zampa 0 4 5.0 4 60 Bowler 28 11.2 18.5 1
+Alex_Carey 10 22 7.0 1 300 Batsman 26 5.0 12.0 0
+Kane_Richardson 0 3 6.8 2 30 Bowler 29 8.5 14.2 0

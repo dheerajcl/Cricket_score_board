@@ -4,16 +4,75 @@
 #include <ctype.h> // Added for toupper
 #include <unistd.h> // Added for sleep
 
+
+struct Player {
+    char name[50];
+    int sixes;
+    int fours;
+    float economy;
+    int wickets;
+    int runsScored;
+    char position[20];
+    int runsGiven;
+    float oversBowled;
+    float oversPlayed;
+    int isCaptain;
+    int isBowler;
+    int isBatsmen;
+};
+
+void resetPlayerDetails(struct Player *player) {
+    player->sixes = 0;
+    player->fours = 0;
+    player->economy = 0.0;
+    player->wickets = 0;
+    player->runsScored = 0;
+    player->runsGiven = 0;
+    player->oversBowled = 0.0;
+    player->oversPlayed = 0.0;
+}
+
+void filereading(struct Player IND_History[11])
+{
+    FILE *historicalFile = fopen("team_india_history.txt", "r");
+    if (historicalFile == NULL) {
+        perror("Error opening historical file");
+        return 1;
+    }
+
+    for (int i = 0; i < 11; ++i) {
+        fscanf(historicalFile, "%s %d %d %f %d %d %s %d %f %f %d",
+            IND_History[i].name, &IND_History[i].sixes, &IND_History[i].fours, &IND_History[i].economy,
+            &IND_History[i].wickets, &IND_History[i].runsScored, IND_History[i].position,
+            &IND_History[i].runsGiven, &IND_History[i].oversBowled, &IND_History[i].oversPlayed,
+            &IND_History[i].isCaptain);
+    }
+    fclose(historicalFile);
+}
+
+// struct Player* searchPlayer(const char *name, struct Player players[]) {
+//     for (int i = 0; i <11 ; ++i) {
+//         if (strcasecmp(name, players[i].name) == 0) {
+//             return &players[i];
+//         }
+//     }
+//     return NULL;  
+// }
+
 void req_rate(float a, float b, float c, float d, float e);
 void runs_needed(int a, int b, int c, int d, int e);
 void projected_score(int a, int b, int c, int d, float e);
 void result(int a, int b, int e, int g, char f, char c[], char d[]);
 float curr_rate(float a, float b, float c);
-void ball_played(int *a, int *b, int *c, int *d, int *e, int *f, int *g, int *h, int *i, int *j);
+void ball_played(int *a, int *b, int *c, int *d, int *e, int *f, int *g, int *h, int *i, int *j,struct Player players [],struct Player strikearr[]);
 int string_comp(char a[], char b[], char c[]);
 int my_toupper(int c);
 
-int main(int argc, char *argv[]) {
+int main() {
+    struct Player IND_History[11];
+    struct Player IND_current[11];
+    struct Player AUS_History[11];
+    struct Player AUS_current[11];
     int wd = 0, nb = 0, lb = 0, b = 0, extras = 0, overs = 0, T_overs = 0, k = 0, balls = 0, T = 0, score = 0, wickets = 0, target = 0, q = 0, c[11], j = 1, f = 0, s = 0;
     float c_rate;
     char toss[15], team_1[15], team_2[15], choice, runs;
@@ -28,18 +87,29 @@ int main(int argc, char *argv[]) {
     scanf(" %c", &choice);
     printf("Enter the type of match (T20/ODI/Test): ");
     scanf("%s", match_type);
-
-     if (strcmp(match_type, "T20") == 0) {
+    if (strcmp(match_type, "T20") == 0) {
         T_overs = 20;
     } else if (strcmp(match_type, "ODI") == 0) {
         T_overs = 50;
     } else if (strcmp(match_type, "Test") == 0) {
-        T_overs = 90; // Maximum 90 overs per day for 5 days
+        T_overs = 90;
     } else {
         printf("Invalid match type!\n");
         return 1;
     }
     system("clear");
+    
+    filereading(IND_History);
+    filereading(AUS_History);
+    for (int i = 0; i < 11; i++) {
+    IND_current[i] = IND_History[i];
+    AUS_current[i] = AUS_History[i];
+    }
+    resetPlayerDetails(IND_current);
+    resetPlayerDetails(AUS_current);
+    struct Player * strikearr[2];
+    strikearr[0]=&IND_current[0];
+    strikearr[1]=&IND_current[1];
 
     T = string_comp(team_1, team_2, toss);
     while (overs <= T_overs || overs >= T_overs) {
@@ -94,7 +164,7 @@ int main(int argc, char *argv[]) {
                 k++;
                 break;
             }
-            ball_played(&balls, &score, &wickets, &extras, &wd, &nb, &lb, &b, &f, &s);
+            ball_played(&balls, &score, &wickets, &extras, &wd, &nb, &lb, &b, &f, &s,AUS_current, strikearr);
         } while (balls < 6);
         if (balls == 6) {
             balls = 0;
@@ -178,7 +248,7 @@ int main(int argc, char *argv[]) {
                 k++;
                 break;
             }
-            ball_played(&balls, &score, &wickets, &extras, &wd, &nb, &lb, &b, &f, &s);
+            ball_played(&balls, &score, &wickets, &extras, &wd, &nb, &lb, &b, &f, &s,IND_current,strikearr);
         } while (balls < 6 && overs < T_overs);
         if (balls == 6) {
             balls = 0;
@@ -210,7 +280,7 @@ int main(int argc, char *argv[]) {
         result(target, score, T, wickets, choice, team_1, team_2);
         sleep(1);
     }
-    getchar(); // Change from getche() to getchar()
+    getchar();
     return 0;
 }
 
@@ -245,80 +315,104 @@ int string_comp(char a[], char b[], char c[]) {
     return ab;
 }
 
-void ball_played(int *a, int *b, int *c, int *d, int *e, int *f, int *g, int *h, int *i, int *j) {
-    char runs;
-    int t;
-    scanf(" %c", &runs);
-    switch (runs) {
-    case '0':
-        *a = *a + 1;
-        break;
-    case '1':
-        *b = *b + 1;
-        *a = *a + 1;
-        break;
-    case '2':
-        *b = *b + 2;
-        *a = *a + 1;
-        break;
-    case '3':
-        *b = *b + 3;
-        *a = *a + 1;
-        break;
-    case '4':
-        *b = *b + 4;
-        *a = *a + 1;
-        *i = *i + 1;
-        break;
-    case '6':
-        *b = *b + 6;
-        *a = *a + 1;
-        *j = *j + 1;
-        break;
-    case 'o':
-    case 'O':
-    *c = *c + 1;  // Increment the wickets
-    *b = *b + 0;  // No runs scored on dismissal
-    printf("Player is out!\n");
-    *a=*a+1;
-    break;
-    case 'w':
-    case 'W':
-        printf("enter runs on wide ball: ");
-        scanf("%d", &t);
-        *b = *b + 1 + t;
-        *d = *d + 1 + t;
-        *e = *e + 1 + t;
-        break;
-    case 'n':
-    case 'N':
-        printf("enter runs on no ball: ");
-        scanf("%d", &t);
-        *b = *b + t + 1;
-        *d = *d + 1;
-        *f = *f + 1;
-        break;
-    case 'l':
-    case 'L':
-        printf("enter runs as leg byes: ");
-        scanf("%d", &t);
-        *b = *b + t;
-        *g = *g + t;
-        *h = *h + 1;
-        break;
-    case 'b':
-    case 'B':
-        printf("enter runs as byes: ");
-        scanf("%d", &t);
-        *b = *b + t;
-        *d = *d + t;
-        *h = *h + t;
-        break;
-    default:
-        printf("Invalid input! Try again.\n");
-        break;
+
+
+void ball_played(int *balls_played, int *total_runs, int *wickets, int *extras, int *wide, int *no_ball, int *leg_byes, int *byes, int *fours, int *sixes,struct Player IND_current [],struct Player strikearr[]) {
+    char run_type;
+    int extra_runs;
+    struct Player * batsmen=&IND_current[0];
+    printf("%s %d\n",batsmen->name,batsmen->runsScored);
+    printf("Enter run type (0-6, W/w for wide, N/n for no ball, L/l for leg byes, B/b for byes, O/o for out): ");
+    scanf(" %c", &run_type);
+    switch (run_type) {
+        case '0':
+            (*balls_played)++;
+            batsmen->runsScored +=0;
+            break;
+        case '1':
+            (*total_runs)++;
+            (*balls_played)++;
+            batsmen->runsScored +=1;
+            break;
+        case '2':
+            *total_runs += 2;
+            (*balls_played)++;
+            batsmen->runsScored +=2;
+            break;
+        case '3':
+            *total_runs += 3;
+            (*balls_played)++;
+            batsmen->runsScored +=3;
+            break;
+        case '4':
+            *total_runs += 4;
+            (*balls_played)++;
+            batsmen->runsScored +=4;
+            batsmen->fours+=1;
+            (*fours)++;
+            break;
+        case '6':
+            *total_runs += 6;
+            (*balls_played)++;
+            batsmen->runsScored +=6;
+            batsmen->sixes+=1;
+            (*sixes)++;
+            break;
+        case 'o':
+        case 'O':
+            (*wickets)++;
+            (*balls_played)++;
+            printf("Player is out!\n");
+            break;
+        case 'w':
+        case 'W':
+            printf("Enter runs on wide ball: ");
+            scanf("%d", &extra_runs);
+            *total_runs += 1 + extra_runs;
+            batsmen->runsScored += extra_runs;
+            (*extras)++;
+            (*wide)++;
+            break;
+        case 'n':
+        case 'N':
+            printf("Enter runs on no ball: ");
+            scanf("%d", &extra_runs);
+            *total_runs += extra_runs + 1;
+            batsmen->runsScored += extra_runs;
+            (*extras)++;
+            (*no_ball)++;
+            break;
+        case 'l':
+        case 'L':
+            printf("Enter runs as leg byes: ");
+            scanf("%d", &extra_runs);
+            *total_runs += extra_runs;
+            (*leg_byes) += extra_runs;
+            batsmen->runsScored += extra_runs;
+            (*byes)++;
+            (*balls_played)++;
+            break;
+        case 'b':
+        case 'B':
+            printf("Enter runs as byes: ");
+            scanf("%d", &extra_runs);
+            *total_runs += extra_runs;
+            (*extras) += extra_runs;
+            batsmen->runsScored += extra_runs;
+            (*byes) += extra_runs;
+            break;
+        default:
+            printf("Invalid input! Try again.\n");
+            break;
     }
+
+    
+    // if(!(run_type-'0')%2==0)
+    // {
+        
+    // }
 }
+
 
 void req_rate(float a, float b, float c, float d, float e) {
     float r_runrate, req_rate;
@@ -328,16 +422,10 @@ void req_rate(float a, float b, float c, float d, float e) {
 }
 
 void runs_needed(int a, int b, int c, int d, int e) {
-    static int runs_needed = 0; // Static variable to keep track of runs needed
-    if (runs_needed == 0) {
-        runs_needed = (a + 1) - b;
-        printf("runs needed to win %d", runs_needed);
-    } else {
-        runs_needed -= d;
-        printf("runs needed to win %d", runs_needed);
-    }
+    int runs_needed;
+    runs_needed = (a + 1) - b;
+    printf("runs needed to win %d", runs_needed);
 }
-
 
 void projected_score(int a, int b, int c, int d, float e) {
     int p_score;
@@ -389,5 +477,3 @@ int my_toupper(int c) {
         return c;
     }
 }
-
-
